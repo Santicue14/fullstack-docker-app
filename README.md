@@ -47,7 +47,7 @@ fullstack-docker-app/
 
 1. Clonar el repositorio:
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/Santicue14/fullstack-docker-app.git
 cd fullstack-docker-app
 ```
 
@@ -138,6 +138,7 @@ docker-compose ps
 
 - **Santiago Baldini Cuevas**
   - GitHub: [santicue14](https://github.com/santicue14)
+  - Linkedin [Santiago_Cuevas](https://www.linkedin.com/in/santiagocuevas147/)
 
 ## 📝 Información Académica
 
@@ -145,10 +146,6 @@ docker-compose ps
 - **Docente**: Fabián Palacios
 - **Universidad**: UNPAZ
 - **Año**: 2025
-
-## 📄 Licencia
-
-Este proyecto es parte de un trabajo académico y está sujeto a los términos y condiciones de la Universidad.
 
 ---
 
