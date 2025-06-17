@@ -10,12 +10,14 @@ function App() {
     try {
       setMessage(null)
       setLoading(true)
-      const response = await fetch('http://localhost:3000/getMensaje')
+      const response = await fetch('http://localhost:3000/api/getMensaje')
       const data = await response.json()
       setMessage(data.mensaje)
       setLoading(false)
     } catch (error) {
       console.error('Error:', error)
+      setMessage('Error al obtener el mensaje')
+      setLoading(false)
     }
   }
 

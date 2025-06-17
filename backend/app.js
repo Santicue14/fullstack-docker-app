@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const port = 3000
+const port = 4000
 const mensajes = require('./data/mensajes.json')
 
 app.use(cors())
@@ -12,6 +12,6 @@ app.get('/getMensaje', (req, res) => {
 })
 
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Servidor corriendo en http://localhost:${port}`)
 })
