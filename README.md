@@ -76,7 +76,7 @@ docker run -d --name nginx --network bridge -p 80:80 fullstack-nginx
 
 ## 📦 Flujo de Red y Proxy
 
-- Nginx escucha en el puerto 80.
+- Nginx escucha en el puerto 3000.
 - Las peticiones a `/` van al frontend (React).
 - Las peticiones a `/api` van al backend (Node.js).
 - El frontend hace fetch a `/api/getMensaje` (no a localhost:3000 directamente).
@@ -85,18 +85,19 @@ docker run -d --name nginx --network bridge -p 80:80 fullstack-nginx
 
 ```nginx
 upstream backend {
-    server backend:3000;
+    server api1:4000;
+    server api2:4000
 }
 
 server {
-    listen 80;
+    listen 3000;
     server_name localhost;
 
     location / {
         proxy_pass http://frontend:5173;
     }
     location /api/ {
-        proxy_pass http://backend:3000;
+        proxy_pass http://backend:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
