@@ -1,137 +1,123 @@
 # 🚀 Fullstack Docker App
 
-Proyecto fullstack desarrollado con React, Node.js y Docker, utilizando WSL2 como entorno de desarrollo.
+Proyecto fullstack desarrollado con React, Node.js y Docker, usando Nginx como proxy reverso. Cada servicio se construye y ejecuta por separado, sin docker-compose.
 
 ## 📋 Descripción
 
-Este proyecto demuestra la implementación de una aplicación fullstack utilizando contenedores Docker, con un frontend en React y un backend en Node.js. La aplicación muestra frases motivacionales aleatorias obtenidas de una API REST.
+Esta app muestra frases motivacionales aleatorias obtenidas de una API REST. El frontend (React) y el backend (Node.js/Express) corren en contenedores separados, y Nginx enruta el tráfico entre ambos.
 
 ## 🏗️ Arquitectura
 
 ```
 fullstack-docker-app/
 ├── frontend/          # Aplicación React
-│   ├── Dockerfile    # Configuración del contenedor frontend
+│   ├── Dockerfile    # Imagen del frontend
 │   └── src/          # Código fuente React
 ├── backend/          # API REST
-│   ├── Dockerfile    # Configuración del contenedor backend
-│   ├── data/         # Datos de la aplicación
-│   └── app.js        # Archivo principal de la API REST
-└── docker-compose.yml # Orquestación de contenedores
+│   ├── Dockerfile    # Imagen del backend
+│   └── data/         # Datos de la app
+│   └── app.js        # API REST principal
+└── nginx/            # Configuración de Nginx
+    ├── Dockerfile    # Imagen de nginx
+    └── conf.d/       # Configs
 ```
 
 ## 🛠️ Tecnologías Utilizadas
 
-### Frontend
 - React + Vite
-- CSS Moderno
-- Docker
-
-### Backend
 - Node.js + Express
+- Nginx
 - Docker
 
-### Infraestructura
-- Docker
-- Docker Compose
-- WSL2 + Ubuntu
+## 🚀 Cómo Levantar el Proyecto (sin docker-compose)
 
-## 🚀 Cómo Levantar el Proyecto
+### 1. Construir las imágenes
 
-### Prerrequisitos
-- Windows 10/11 con WSL2 habilitado
-- Docker Desktop instalado
-- Git instalado
+Desde la raíz del proyecto:
 
-### Pasos de Instalación
-
-1. Clonar el repositorio:
 ```bash
-git clone https://github.com/Santicue14/fullstack-docker-app.git
-cd fullstack-docker-app
+# Backend
+cd backend
+docker build -t fullstack-backend .
+
+# Frontend
+cd ../frontend
+docker build -t fullstack-frontend .
+
+# Nginx
+cd ../nginx
+docker build -t fullstack-nginx .
 ```
 
-2. Construir y levantar los contenedores:
+### 2. Ejecutar los contenedores
+
 ```bash
-docker-compose up --build
+# Backend
+# Expone el puerto 3000
+# Asegúrate de que la red bridge esté disponible o crea una personalizada si lo deseas
+#Crear una red
+docker network create app-network
+
+docker run -d --name backend --network bridge -p 3000:3000 fullstack-backend
+
+# Frontend
+# Expone el puerto 5173
+
+docker run -d --name frontend --network bridge -p 5173:5173 fullstack-frontend
+
+# Nginx
+# Expone el puerto 80 (puedes mapearlo a otro si lo necesitas)
+docker run -d --name nginx --network bridge -p 80:80 fullstack-nginx
 ```
 
-3. Acceder a la aplicación:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000
+### 3. Acceder a la aplicación
+- Frontend: http://localhost:3000/ (Nginx enruta a React)
+- API: http://localhost:3000/api/getMensaje (Nginx enruta al backend)
 
-## 📦 Estructura de Contenedores
+## 📦 Flujo de Red y Proxy
 
-### Frontend Container
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY . .
-RUN npm i
-EXPOSE 5173
-EXPOSE 80
-CMD ["npm", "run", "dev"]
-```
+- Nginx escucha en el puerto 80.
+- Las peticiones a `/` van al frontend (React).
+- Las peticiones a `/api` van al backend (Node.js).
+- El frontend hace fetch a `/api/getMensaje` (no a localhost:3000 directamente).
 
-### Backend Container
-```dockerfile
-FROM node:alpine
-WORKDIR /app
-COPY . .
-RUN npm install
-EXPOSE 3000
-CMD ["node", "app.js"]
-```
+### Ejemplo de configuración Nginx (`nginx/conf.d/default.conf`):
 
-### Docker Compose
-```yaml
-version: '3.8'
-services:
-  frontend:
-    ports: ["80:5173"]
-    build: { context: ./frontend }
-    volumes: ["./frontend:/app"]
-    depends_on: [backend]
-    networks: [app-network]
-  
-  backend:
-    ports: ["3000:3000"]
-    build: { context: ./backend }
-    volumes: ["./backend:/app"]
-    networks: [app-network]
+```nginx
+upstream backend {
+    server backend:3000;
+}
 
-networks:
-  app-network:
-    driver: bridge
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://frontend:5173;
+    }
+    location /api/ {
+        proxy_pass http://backend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
 ```
 
 ## 🔄 Desarrollo
 
-El proyecto está configurado con hot-reload tanto para el frontend como para el backend. Los cambios en el código se reflejarán automáticamente en la aplicación.
-
-### Comandos Útiles
-
-```bash
-# Ver logs de los contenedores
-docker-compose logs -f
-
-# Detener los contenedores
-docker-compose down
-
-# Reconstruir un servicio específico
-docker-compose up --build frontend
-
-# Ver estado de los contenedores
-docker-compose ps
-```
+- Hot-reload disponible en frontend y backend.
+- Los cambios en el código se reflejan automáticamente si usas volúmenes (`-v`).
 
 ## 📚 Características
 
 - Desarrollo en tiempo real con hot-reload
 - Aislamiento de servicios con Docker
-- Comunicación segura entre contenedores
+- Comunicación entre servicios vía Nginx
 - Fácil despliegue y mantenimiento
-- Interfaz de usuario moderna y responsive
+- Interfaz moderna y responsive
 - API REST para frases motivacionales
 
 ## 👨‍💻 Autor
